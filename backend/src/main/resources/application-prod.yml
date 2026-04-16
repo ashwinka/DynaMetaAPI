@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${MASTER_DB_URL}
+    username: ${MASTER_DB_USERNAME}
+    password: ${MASTER_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: master-pool
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+logging:
+  level:
+    com.metadyna: INFO
+    root: WARN
