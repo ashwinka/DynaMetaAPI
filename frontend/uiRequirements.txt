@@ -1,0 +1,277 @@
+
+MetaDyna UI Framework:
+	
+	This is the UI Framework which is designed to render all the Menus (Menu metadata), screens and UI components based on the Module Metadata.
+	
+	This Framework will provide the look and feel of MUI components layout and styles.
+	Framework must be built using HTML, Javascript, Jquery and css.
+	This Framework is a kind of single page applcaition and composed of 2 main screens(html files) which is login screen (login.html) and Application Screen (index.html)
+	
+	Framework must support offline mode, where _apiBaseUrl is not configure in apiConfig.js file then its offline mode.
+		In Offline mode all the menu_registry, module metadata will be dynamically loaded using dynamic js script tag which will be detailed later.
+	
+	This Framework has 5 Major components in form of <div> placeholders in the application page (index.html) to render the same
+		1. App Header:
+			Its the App Bar which renders at the top of the screen which has Menu icon, App Name, Navigated Module Name, User Icon and Logout icon.
+		
+		2. Menu (Dynamic Menu Builder)
+			Its a Menu Drawer, which lists all the module in the application along with Menu groups.
+			This Will be opened on click on Menu Icon in the App Header.
+			
+		3. Data Listing Component
+			This component will render the "Data Listing Grid" from the "Listing Metadata"
+			This Components which lists all the data records of the selected module from the Menu Drawer.
+			
+			This Components will loads the records in 2 ways which is termed as "Loading Model"
+				a. Client Model:
+					In this model all the data records in the DB will be loaded at once from the backend API application.
+					All the functional behaviour like Searching, Sorting, pagination will be executed in the client/UI side on the pre loaded data.
+				b. Server Model:
+					In this Model the Data will be loaded from backend in a paginated way by passing the Listig/Search Criteria
+					Listing/Search Criteria will information like startIndex, recordsPerPage, sortField, sortDirection, Listing Column Fields, Search Conditions.
+					All the functional behaviour will be execued in the backend. Every operation like filter search, sorting and pagination will make Backend API call to load the data.
+					
+				Note: In both the Data Load Model, The Component needs to create the Listing/Search Criteria JSON and then to descide to call UI framework or Back end API to perform actions.
+				
+			This Component is composed with 2 Hoziontal Components (Horizontally divided)
+				a. Widgets Panel: (Top Row)
+					Which can have multiple widgets (small size ones) as per the configurations in the metadata.
+					Widget purpose is to show the count of the filtered data records based on the filter conditions configured in each widget metadata.
+					Widget Icons, label and colors are configurable.
+					NOTE: For the Server Model the widget will get the cached data from backend and taken up in Phase2.
+				b. Listing Panel: Which is again divided in to 2 vertical sections
+					Left side Filter section - which renders all the filter fields configured in the Listing Metadata.
+					Right side Listing Grid - which has Grid Hader Toolbar, Data Record grid, Pagination Bar
+					
+		4. Form Component:
+			This Component will render the Form with Data Record based on the "Form Metadata".
+			This Component will be rendered in the <div> placeholder as a Model Popup.
+			On edit of any data record in the Data Listing Screen, the Form Components needs to be opened or rendered.
+			
+			Form Components has multiple child components:
+				"Form Header Toobar", "Navigation Panel", "Form Breadcrum", "Tab Bar", "Tab Panel", "Section Panel", "Grid Panel", "Multi-Context Model Popup", "Multi-Context Breadcrum", 
+			
+			The "Form Metadata" mainly has 2 parts, Sections and Fields. 
+			Sections can further have multiple child and grand child Sections with no restrictions on any levels. 
+			Root:
+				Sections:[] -- This is first level where Navigation Panel will be composed.
+					Fields:[] -- Usually First level section will not have fields, if it has then "Placeholder Tab Panel" needs to be rendered.
+					Sections:[] - This is second level, where "Tab Bar" and "Tab Panel" will be composed for the section flagged as "Tab Panel" in metadata. If the Section is not flagged as Tab Panel then it must render under "Placeholder Tab Panel".
+						Fields:[]
+						Sections:[] - Its thirt level, where "Section Panel" with its fields will render under the "Tab Panel", 
+							Fields:[]
+							Sections:[] - Its fourth and above levels and must not render under Section Panel, where as all the fourth and above sections nees to be collected recurcively and render under "Tab Panel" which is described later.
+				
+			*** Metadata structure for Sections and Fields are explained later. ***
+				
+			Layout Of Form:
+			a. Form Header Toobar Component (In the Top):
+				It renders Module Name, Data Record Title, Button group (for Save, Cancel, Switch Forms and More Actions)
+			b. Form Component:
+				its vertically divided in to
+				i. "Navigation Panel" (Left side):
+					THIS WILL LIST ONLY FIRST LEVEL SECTION in the metadata.
+				ii. "Details Area" (Right side): This will again broken down in to multiple components
+					"Form Breadcrum" - describes the selected section from "Navigation Panel".
+					"Tab Bar" - WILL LIST ONLY SECOND LEVEL child flagged section of the selected section from Navigation Panel.
+						***If the Section is not flagged as Tab Panel then it must render as "Section Panel" under under "Placeholder Tab Panel".***
+					"Tab Panel" - where all the second level sections are rendered as Tab Panel to accomodate all its fields and child sections.
+						On click of Tab Bar item, the respective Tab Panel needs to be rendered.
+						Tab Panel will have one or multiple "Section Panel" and "Data Grid" for non-multi context and multi-context sections.
+						"Section Panel" - where all the child and grand child sections (third and above level sections) of selected Tab Panel sections will be rendered along with the Fields Components.		
+					*** If the section selected in left navigation panel is multi-context then Tab Bar and Tab Panel must not rendered rather "Data Grid" needs to be rendered in Form Area.***
+					*** If the section selected in Tab Bar is multi-context then Tab Panel must render Data Grid and must not render child sections.***
+					
+			c. Multi-Context Model Popup Panel:
+				This will be the common model popup which will be rendered on edit of any multi-context-record from the form data grid.
+				This will again follow the similar layout as "Form Components", except rendering of "Left Navigation Panel".
+				Each time the multi-context record is edited either from the main form Data Grid or from the multi-context-popup Data Grid the same popup will be re-renderd with the stack approach.
+				In the Breadcrum section, back button will be provided and on click it should go back the previous multi-context section entry in the stack.
+				A Breadcrum must be display at the top of the popup  to indicate which multi-context level the user is navigated in the same stack order.
+				Breadcrum will have info on section name and record title (May be index of the record for now).
+				
+		5. Common Lookup Popup:
+			This is generic model popup component which will be openend and rendere in the <div> placeholder on click of any lookup field (which is associated with lookup reference ModuleId).
+			This popup will have simliar layout as "Data Listing Components" except widget area. And the Metadata almost similar to Data Listing Metadata. And have siilar Data Loading Models.
+			Additionally there should be bottom button bar with "Select" button (to select the records) and "Close" button(to close the popup).
+			Validation needs to be provided for single or multiple record selection based on the Lookup field configurations.
+			Lookup field metadata will provide the configurations for the data mapping between main form field store values and lookup record fields.
+	
+		
+	Sections category:
+				
+		1. "Non-Multi-Context" section 
+			These section will be rendered as standard collapsibal "Section Panel" component.
+			Panel Component will render all the Fields associated with it.
+			If the Section has child Sections then it should not render under the current "Section Panel" as Sub Panels, rather it must render under its parent "Tab Panel" or "Placeholder Tab Panel".
+				Framework must iterate recursively and collect all the child and grand child section and render as "Section Panel" under its parent "Tab Panel".
+				*** While iterating recursively if it finds multi-context child section then don't recursively iterate beyond.***
+						
+			Framework must ensure to render only non-multi-context fields under Non-Multi-Context Section Panel by validating the "fieldPath".
+				*** if the field path has $ then its multi-context section field***
+				e.g "icsrInfo.patient.patientName" - Non-multi-context field
+					"icsrInfo.patient.medicalHistory$.indicationName" - Multi-context field, $ indicated the context is multi-contex.
+				Note: This is not the standard json path or field path, this is specific to Meta-Dyna framework.
+				
+		2. "Multi-context" section (Data Grid)
+			Framework must render these sections as "Data Grid", 
+			Multi-Context section will be flagged in the metadata with the property "multiContext:true"
+			Framework must ensure these section must have the property "contextPath" in the metadata and contextPath must be multi-context path. 
+			ContextPath are the entity path or json path of the sections in json object.
+			e.g. "icsrInfo.patient.medicalHistory$", $ indicates the multi-context
+			
+			"Data Grid" must render the columns from field from "gridFiels". 
+			***Child  Sections should not be rendere in the respective data grid.***
+			"Data Grid" should render the fields as editable if the sections is flagged as editable with the property in metadata "editableGrid:true"
+			"Data Grid" must include edit icon to edit the record which opens model popup "Multi-Context-Popup" whcih was detaild earlier.
+			
+			"Data Grid" Layout:
+				a. "Grid Header Tool Bar"
+					This will have "Section Title", "Search bar" and "Button bar"
+					Section Title will be prefixed with collapsible icon to collapse or expand the grid and placed at left
+					Search Bar with input component embeded with search icon and clear icon
+					Button Bar will be placed at right to include "Column Selection Icon", "Copy", "Add", "Delete".
+					
+				b. "Grid Column Header"
+					Grid columns will be rendered from the gridFields of the multi-context sections.
+					Grid column will have properties like, hidden, hidable, allowSorting, columnSize(in ch), 
+				c. "Grid Records Panel"
+					This record should not have vertical scrol, only horizontal scroll should include to view all columns.
+					column size will be configurable in metadata with the property "columnSize:50ch" (not in px, but in ch)
+					
+				d. "Grid Pagination Bar", with combo to select "records per page".
+				
+			"Date Grid" Functional Features:
+				a. Add, Delete and Copy as action features.
+				b. Support Sorting on the fields which are flagged in the metadata with property "allowSorting:true"
+				c. Support Searching on the fields which are flagged in the metadata with property "basicSearchField:true".
+				d. Support Column Selection for Hiding/Showing of Columns for the fields which are flagged in metadata with property "hideableField:true".
+			
+	Field Components categories:		
+	
+		fields and its types will be rendered based on the properties of the field metadata:
+			"label" : "label of the field, it can have label code to mupport I18N trans"
+			"dataType" : "text/numeric/date/file",
+			"fieldPath":"icsrInfo.patient.patientName"
+			"renderAs" : "text/teaxtarea/combo/multi-sel-combo/multi-field-combo/radio/checkbox/multi-field-checkbox/bool-switch/lookup/htmlTextArea/typeAhead",
+			"required":"true/false"
+			"maxLen":"numeric value, applicable for text/textarea"
+			"sequence":"number, which represent the sequence of the field in the form."
+			"codelist" : "codelist-name ("COUNTRY/SEX") or static cl-data array object[{code:"", decode:""}], applicable for combo/radio/checkbox",
+			"multiLingualField": "true, applicable for text/textarea which support field to enter data in multiple languages(Can be taken up later)",
+			"lookupReference" : "ModuleId will be mentioned and the common lookup coponent will be opened for record selection"
+			"dataApi":"api url, applicable for type ahead search field"
+			"allowPartialDate":"true, only for date fields"
+			"smartField":"true applicable only for codelist field"
+			"nfField":"true if its null flavour field"
+			"nfCodelist" : " codeist name or dataList for NF field"
+			"pairFields" : [{field1 details}, {field2 details}]
+			"defaultData" : "data1, the same needs to be display on first time render or the grid record is added"
+			"extraLabel":"its a additional labels usually used for R2/R3 tags and be shown on demand"
+			"helpTip":"Help on hover of the icon next to the field label"
+	
+	Framework Flow:
+		1. Login Page (login.html):
+			takes user name and password for phase1 and Auth0 will be integrated later.
+			On Login:
+				Offline Mode:
+					Enter to application page with dummy token and tenantId to session store.
+					Load the Menu Metadata from dynamic menu_registry.js with js script tag.
+				Online Mode:
+					Validate TenantID in the URL.
+					Perform API call to authenticate.
+					Server will respond with Token, Menu_registry
+					Add token, tenantId and Menu registry to session store.
+				
+		2.	Application Page (index.html)
+			If the session store do not have token or tenantId then redirect to Login page.
+			Render rhe Menu drawer from cached session sore menu registry.
+			Open or navigate to the first menu item as default.
+			
+		3. On Menu item click:
+			Offile Mode:
+				Load the Codelist from codelist.js dynamically by js script inject and cache it
+				Load the Module specific metadata from <module>_metadata.js dynamically by js script inject and cache it
+			Online Mode:
+				If the codelist metadata is not loaded then load the module specific metadata and codelist data together from backend and cache it.
+				If the Codelist metada is already cached/loaded then load the module specific metadata alone from backend.
+				If the Metadata is already cached/loaded then load from cache.
+				
+		4. Data Listing Screen Render:
+			Once the metadata is loaded then render the Data Listing screen 
+			Offile Mode:
+				Do not render the data records as there is no back end integrations. It will be used only creating new records and download as json
+			Online Mode:
+				Load the module specific data records from backend depends on Loading model described earlier.
+				Render the Data Listing records panel and Widgets accordingly.
+			
+		5. Data Record Edit Form render:
+			New Record:
+				create and empty json object with generated recordId and render the Form
+			Edit Record
+				On click of Edit Data Record, load the Module specific Data record from backend and render the Form.
+				
+	
+	
+	Framework Functional Features:
+		The framework must support below features based on the configurations in the metadata.
+		
+		1. Conditional Renders:
+			All the sections and fields will be rendered based on the configured conditions which will be maintained as separate metadata with the rules (Will explained later on the json structure)
+			It must support 
+				Hiding of sections and fields, 
+				Disabling of fields, 
+				Making fields Readonly and 
+				Marking fields as mandatory.
+				Change the codelist/Max length/Lookup field ref moduleID
+				set/populate value for a field.
+				add/delete multi-ctx records.
+				
+			On any field change, the corresponding render_rule based on the edited field in triggerFields list needs to evaluated.
+			
+		2. RBAC:
+			Framework must support RBAC for action button only at the "Form Header bar" buttons and actions.
+			
+		3. Validations:
+			Framework must support validations at 2 levels
+			1. Hard Edit checks based on metadata field properties like maxLen and required.
+			2. Soft Validations base on the validation rules configured as a separate metadata file with validation rules(which will be detailed later).
+				Validation triggers from the action item from the "Form Header bar".
+		
+		4. I18N Support:
+			Framework must suport I18N support on labels and helpTip
+	
+		5. Form Summary:
+			Framework must support generating of the Form Summary as a more action item in the "Form Header bar"
+		
+		6. Switch Form:
+			Framework must support switching from one form metadata to other on the same data JSON without loosing the edited data.
+		
+		7. Responsive UI:
+			Framework must support Responsive UI based on the resolution for web/tablet/mobile
+			Fields Per Row:
+				web page: Display 3 fields in a row
+				Tablet: 2 fields in a row
+				Mobile: 1 field in a row
+			For Mobile View, Data Grid needs to be rendered as "Card" similar to MUI component with edit icon and delete icon.
+	
+		8. Edit JSON:
+			Framework must support to capture the separate JSON for the edited or modified fields with same structure as main Data JSON.
+			for the multi-context records, "id" fields needs to be captured.
+			for the delted records, a separate JSON needs to be created with the same structure as main JSON along with id field for multi-context records.
+		9. Context Partial Render:
+			Framework must not render the whole sections in one go, rather on selection and navigation the respective sections must be rendered.
+			
+			
+			
+			
+
+Metadata JSON Structure:
+	Menu Registry Metadata: refer Menu_registry.json
+	
+	Listing Metadata: refer 
+	Form Metadata:
+	Lookup Metadata:
+	I18nTrans Metadata: for all above refer Ui_metadata.txt
+	
+
