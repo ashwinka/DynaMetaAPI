@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: metadyna
+  profiles:
+    active: dev
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  servlet:
+    context-path: /metadyna-api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha
+
+app:
+  jwt:
+    secret: thisIsTheMetaDynaApiApplicationKey256
+    expiry-minutes: 60
+  credential-encryption-key: Password1#MetaDyna
+  cache:
+    metadata-ttl-minutes: 300
+    menu-ttl-minutes: 300
+    max-size: 1000
