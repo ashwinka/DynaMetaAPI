@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    # Master tenant datasource (used for TENANT_INFO lookups)
+    url: jdbc:postgresql://localhost:5432/META_DYNA_MASTER
+    username: postgres
+    password: Password1
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: master-pool
+      maximum-pool-size: 5
+      minimum-idle: 2
+
+logging:
+  level:
+    com.metadyna: DEBUG
+    org.springframework.jdbc: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] [%X{correlationId}] [%X{tenantId}] %-5level %logger{36} - %msg%n"
