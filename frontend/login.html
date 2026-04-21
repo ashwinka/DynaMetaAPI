@@ -786,7 +786,7 @@
       sessionStorage.setItem('md_user',       user);
       sessionStorage.setItem('md_tenant_id',  _tenantId || 'offline');
       sessionStorage.setItem('md_api_mode',   'offline');
-      window.location.href = 'index.html?tenantId=' + encodeURIComponent(_tenantId || 'offline');
+      window.location.href = 'app.html?tenantId=' + encodeURIComponent(_tenantId || 'offline');
       return;
     }
 
@@ -838,7 +838,7 @@
           sessionStorage.setItem('md_menu', JSON.stringify(menuRegistry));
         }
 
-        window.location.href = 'index.html?tenantId=' + encodeURIComponent(_tenantId);
+        window.location.href = 'app.html?tenantId=' + encodeURIComponent(_tenantId);
       },
       error: function (xhr) {
         btn.removeClass('loading').prop('disabled', false);
