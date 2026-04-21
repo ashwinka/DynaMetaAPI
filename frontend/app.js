@@ -5,7 +5,7 @@ function initMetadaDynaApp(){
 	//Load the cached menu registry from sessionStore
 	
 	AppMenuHeader.build();	
-	menuNavigation();
+	AppMenuHeader.navigate();
 }
 
 let typingDelay;
@@ -72,6 +72,19 @@ function registerAppClickEvents(){
 		}
 		
 		
+		/******** APP Menu handlers ***********/
+		//Register onclick event for the menu item.
+		if($(e.target).parents('.menu-item')[0] || $(e.target).hasClass('menu-item')){
+			
+			let menuCmp = $(e.target).hasClass('menu-item') ? e.target : $(e.target).parents('.menu-item')[0];
+			AppMenuHeader.setMenu(menuCmp);
+		}
+		
+		if($(e.target).parents('.menu-drawer__close')[0] || $(e.target).hasClass('menu-drawer__close')){			
+			AppMenuHeader.toggle(e.target);
+		}
+		
+		
 		/********** Data Listing Page handlers ******/
 		//Clear Filter handler [ls-filter-clear]
 		if($('.ls-filter-clear').has(e.target)[0] || $(e.target).hasClass('ls-filter-clear')){
@@ -122,6 +135,14 @@ function registerAppClickEvents(){
 			//ls-table-field
 			let actionBtn = $(e.target).hasClass('md-form-btns') ? e.target : $('.md-form-btns').has(e.target)[0];
 			AppFORM.action(actionBtn);
+			
+		}
+		
+		//Form Left navigation handler collapse handler [md-nav__collapse-btn]
+		if($(e.target).parents('.case-edit-app .md-nav .md-nav__collapse-btn')[0] || $(e.target).hasClass('md-nav__collapse-btn')){
+			//ls-table-field
+			let navHideBtn = $(e.target).hasClass('md-nav__collapse-btn') ? e.target : $('.md-nav__collapse-btn').has(e.target)[0];
+			AppFORM.toggleNav(navHideBtn);
 			
 		}
 		
@@ -298,12 +319,6 @@ function closeLookup(){
 	$('.module-lookup').hide();
 }
 
-function toggleMenuGeneric(e) {
-	if(e){
-		$(e.target).parents('.menu-wrapper').find('.md-dropdown__menu').toggleClass('open');
-	}	
-}
-
 function selectAppLanguage(currCmp) {
 	let langCode = currCmp.getAttribute('langCode');
 	langCode = langCode ? langCode : 'en';
@@ -316,18 +331,6 @@ function selectAppLanguage(currCmp) {
 	initMetadaDynaApp();	
 }
 	
-	
-/* ═════════════════════════════════════════════════════ Module NAVIGATION ═════════════════════════════════════════════════════ */
-function menuNavigation() {
-  let menuItemObj = AppMenuHeader.activeModule();
-  
-  if (menuItemObj.view === 'form' && menuItemObj.moduleId) {
-    showFormDirect(menuItemObj);
-  } else if (menuItemObj.moduleId) {
-    AppListScreen.listing();
-  }
-}
-
 /* -------------------- Utils Functions ----------------------------*/
 
 /* ── Generate a negative timestamp-based ID for new (unsaved) records ─── */
@@ -338,9 +341,6 @@ function generateUUID() {
     return v.toString(16);
   });
 }
-
-
-
 
 function getCtxByPath(ctxPath, jsonObj, ctxIds, initMcObject){
 	let pathArr = (ctxPath && ctxPath.split('.')) || [];
