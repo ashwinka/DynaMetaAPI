@@ -18,6 +18,7 @@
 		for(clId in clPack){
 			_cl_store[clId] = clPack[clId];
 		}
+		_loadStatus = true;
 		
 	}
 	
