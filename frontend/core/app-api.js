@@ -53,7 +53,7 @@
 	async function fetchMetadata(moduleId) {
 		let codelistsLoaded = false;
 		if(AppCL !== undefined){
-			isClLoaded = AppCL.status();
+			codelistsLoaded = AppCL.status();
 		}
 		
 		if(undefined === CONFIG_API_BASE_URL || !CONFIG_API_BASE_URL){
