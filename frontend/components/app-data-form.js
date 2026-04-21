@@ -57,6 +57,11 @@
 		return _mcGridState[ctxPath];
 	}
 	
+	function toggleNavPanel(currCmp){
+		$(currCmp).parents('.md-nav').toggleClass('hide')
+		$(currCmp).toggleClass('hide')
+	}
+	
 	function clearLookupValue(clrBtn){
 		let fieldId = $(clrBtn).parents('.md-lookup').attr('fieldId');
 		let flMd = _fieldsCache[fieldId];
@@ -596,7 +601,7 @@
 	
 	function mcRecEditHandler(editBtn){
 		let mcRecId = $(editBtn).parents('.multi-ctx-rec-wraper').attr('rec-id');
-		let secId = $(editBtn).parents('.multi-ctx-section').attr('id');
+		let secId = $(editBtn).parents('.multi-ctx-section').attr('section-id');
 		if(!mcRecId || !secId || !_sectionCache[secId]){
 			return;
 		}
@@ -723,7 +728,7 @@
 		let mcSecPanel = mcRecPanel && $(cmp).parents('.multi-ctx-section')[0];
 		
 		let recId = mcRecPanel?.getAttribute('rec-id');		
-		let secMd = _sectionCache[mcSecPanel?.id];		
+		let secMd = _sectionCache[mcSecPanel?.getAttribute('section-id')];		
 		let ctxPath =  secMd?.contextPath;
 		
 		if(!recId || !mcSecPanel || !ctxPath){
@@ -909,7 +914,7 @@
 		if(fields && fields.length > 0){
 			
 			let currSp = [];
-			currSp.push('<div class="md-panel ">');
+			currSp.push('<div class="md-panel" section-id="'+secMd.sectionId+'">');
 			//Panel Header
 			currSp.push('	<div class="md-panel__header">');
 			currSp.push('	  <span class="md-panel__chevron">' + icon('chevronDown') + '</span>');
@@ -1207,7 +1212,7 @@
 		let gridRecs = _getMultiCtxRecs(md) || [];
 			
 		let fg = [];
-		fg.push('<div class="md-grid multi-ctx-section" id="'+md.sectionId+'">');
+		fg.push('<div class="md-grid multi-ctx-section" section-id="'+md.sectionId+'">');
 		
 		fg.push(buildFormGridToolbar(md, gridState));
 		fg.push(buildFormGrid(md, gridRecs, gridState));
@@ -1359,7 +1364,7 @@
 		//Nav header
 		np.push('	<div class="md-nav__header">');
 		np.push('		<span class="md-nav__title">'+AppI18N.t('Sections')+'</span>');
-		np.push('		<button class="md-icon-btn dark md-nav__collapse-btn" title="'+AppI18N.t('Collapse panel')+'">');
+		np.push('		<button class="md-icon-btn dark md-nav__collapse-btn" style="height:auto;" title="'+AppI18N.t('Collapse panel')+'">');
 		np.push(			icon('panelLeft'));
 		np.push('		</button>');
 		np.push('	</div>');
@@ -1501,7 +1506,8 @@
 		msSearch:msComboSearchHandler,
 		clearLookup:clearLookupValue,
 		valSwitch:switchInputHandler,
-		action:handleFormActions
+		action:handleFormActions,
+		toggleNav:toggleNavPanel,
 		
 	};
 })(window);
