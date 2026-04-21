@@ -47,70 +47,7 @@ window.MDUtils = (function () {
     return svg;
   }
 
-  /* ---- Path Utilities ---- */
-  /** Strip $ from contextPath/fieldPath segments */
-  function cleanPath(path) {
-    return path.replace(/\$/g, '');
-  }
-
-  /** Parse contextPath or fieldPath into an array of segments (without $) */
-  function parsePath(path) {
-    return cleanPath(path).split('.');
-  }
-
-  /** Resolve a value from a nested object using a path string */
-  function getByPath(obj, path) {
-    if (!obj || !path) return undefined;
-    const segs = parsePath(path);
-    let cur = obj;
-    for (const seg of segs) {
-      if (cur === null || cur === undefined) return undefined;
-      cur = cur[seg];
-    }
-    return cur;
-  }
-
-  /** Set a value in a nested object using a path string, creating intermediate objects/arrays as needed */
-  function setByPath(obj, path, value) {
-    const segs = parsePath(path);
-    let cur = obj;
-    for (let i = 0; i < segs.length - 1; i++) {
-      const seg = segs[i];
-      if (cur[seg] === undefined || cur[seg] === null) {
-        // Peek next segment: if numeric, use array; else object
-        cur[seg] = {};
-      }
-      cur = cur[seg];
-    }
-    cur[segs[segs.length - 1]] = value;
-  }
-
-  /** Check if a fieldPath belongs to the given multiContext contextPath scope */
-  function isFieldInContext(fieldPath, contextPath) {
-    // For non-multi-context fields, fieldPath has no $
-    // For multi-context fields, fieldPath contains $
-    const hasMultiCtx = fieldPath.includes('$');
-    if (contextPath) {
-      // We want fields whose path starts after contextPath
-      const ctxClean = cleanPath(contextPath);
-      const fieldClean = cleanPath(fieldPath);
-      return fieldClean.startsWith(ctxClean + '.') && !hasMultiCtx;
-    }
-    // Root level: non-multi-context field
-    return !hasMultiCtx;
-  }
-
-  /** Check if fieldPath is a direct child of contextPath (for grid display) */
-  function isDirectFieldOfContext(fieldPath, contextPath) {
-    const ctxClean = cleanPath(contextPath);
-    const fieldClean = cleanPath(fieldPath);
-    if (!fieldClean.startsWith(ctxClean + '.')) return false;
-    const remainder = fieldClean.slice(ctxClean.length + 1);
-    // Direct child = no more dots
-    return !remainder.includes('.');
-  }
-
-  /* ---- DOM Utilities ---- */
+/* ---- DOM Utilities ---- */
   function el(tag, attrs = {}, children = []) {
     const elem = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs)) {
@@ -138,83 +75,9 @@ window.MDUtils = (function () {
     if (innerHTML) e.innerHTML = innerHTML;
     return e;
   }
-
-  /* ---- UUID ---- */
-  let _uid = 1;
-  function uid(prefix = 'md') { return `${prefix}_${_uid++}`; }
-
-  /* ---- Deep Clone ---- */
-  function deepClone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-
-  /* ---- Evaluate Condition String ---- */
-  function evalCondition(condStr, dataObj) {
-    try {
-      // Replace field paths (e.g. patient.gender) with values from dataObj
-      const expr = condStr.replace(/([a-zA-Z_][a-zA-Z0-9_.]*)/g, (match) => {
-        const val = getByPath(dataObj, match);
-        if (val === undefined) return 'undefined';
-        if (typeof val === 'string') return `'${val}'`;
-        return val;
-      });
-      // eslint-disable-next-line no-new-func
-      return new Function(`return (${expr})`)();
-    } catch {
-      return false;
-    }
-  }
-
-  /* ---- Codelist Helpers ---- */
-
-  /**
-   * Synchronous — returns whatever is already cached in MetaDynaAPI's store.
-   * Returns [] if not yet loaded. Use resolveCodelistAsync() to guarantee data.
-   */
-  function getCodelistOptions(codelist) {
-    if (!codelist) return [];
-    if (Array.isArray(codelist)) return codelist;
-    return [];
-  }
-
-  /**
-   * Async — delegates to MetaDynaAPI.resolveCodelistForLang() which applies
-   * the current UI language to each entry's translations.
-   * Falls back to resolveCodelist() if the lang-aware method isn't available.
-   * Always returns a Promise<[{code, decode, translations}]>.
-   */
-  function resolveCodelistAsync(codelist) {
-    if (!codelist) return Promise.resolve([]);
-    if (Array.isArray(codelist)) return Promise.resolve(codelist);
-    if (window.MetaDynaAPI) {
-      var lang = sessionStorage.getItem('md_lang') || 'en';
-      if (typeof window.MetaDynaAPI.resolveCodelistForLang === 'function') {
-        return window.MetaDynaAPI.resolveCodelistForLang(codelist, lang);
-      }
-      if (typeof window.MetaDynaAPI.resolveCodelist === 'function') {
-        return window.MetaDynaAPI.resolveCodelist(codelist);
-      }
-    }
-    return Promise.resolve([]);
-  }
-
-  /* ---- Debounce ---- */
-  function debounce(fn, ms) {
-    let t;
-    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-  }
-
-  /* ---- Close dropdowns on outside click ---- */
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.md-dropdown')) {
-      document.querySelectorAll('.md-dropdown__menu.open').forEach(m => m.classList.remove('open'));
-    }
-    if (!e.target.closest('.md-typeahead')) {
-      document.querySelectorAll('.md-typeahead__dropdown.open').forEach(m => m.classList.remove('open'));
-    }
-  });
-
+  
   /* ---- Toast Notifications ---- */
+  
   function _ensureToastContainer() {
     let c = document.querySelector('.md-toast-container');
     if (!c) {
@@ -241,35 +104,8 @@ window.MDUtils = (function () {
     if (duration) setTimeout(() => t.remove(), duration);
   }
 
-  /* ---- Section tree flattening ---- */
-  function flattenSections(sections, parent = null, depth = 0) {
-    const result = [];
-    if (!sections) return result;
-    for (const sec of sections) {
-      result.push({ ...sec, _parent: parent, _depth: depth });
-      if (sec.sections && sec.sections.length) {
-        result.push(...flattenSections(sec.sections, sec.sectionId, depth + 1));
-      }
-    }
-    return result;
-  }
-
-  /* ---- Get section by id from tree ---- */
-  function findSection(sections, sectionId) {
-    if (!sections) return null;
-    for (const sec of sections) {
-      if (sec.sectionId === sectionId) return sec;
-      const found = findSection(sec.sections, sectionId);
-      if (found) return found;
-    }
-    return null;
-  }
 
   return {
-    icon, el, html, ce, uid, deepClone, evalCondition,
-    getCodelistOptions, resolveCodelistAsync, debounce, toast,
-    getByPath, setByPath, cleanPath, parsePath,
-    isFieldInContext, isDirectFieldOfContext,
-    flattenSections, findSection
+    icon, toast
   };
 })();
