@@ -1,1 +1,4 @@
 
+*.class
+/backend/target
+/backend/.idea
