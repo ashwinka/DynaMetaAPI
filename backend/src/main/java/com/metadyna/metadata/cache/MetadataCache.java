@@ -3,6 +3,7 @@ package com.metadyna.metadata.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.metadyna.config.AppProperties;
+import com.metadyna.metadata.model.AppRules;
 import com.metadyna.metadata.model.ModuleMetadata;
 import com.metadyna.metadata.model.UiMetadata;
 import com.metadyna.metadata.model.UiMetadataBundle;
@@ -38,6 +39,7 @@ public class MetadataCache {
     private Cache<String, UiMetadataBundle> uiMetadataBundleCache;
     private Cache<String, List<MenuGroup>> menuGroupsCache;
     private Cache<String, List<ModuleEntry>> modulesCache;
+    private Cache<String, List<AppRules>> appRulesCache;
 
     @PostConstruct
     public void init() {
@@ -67,6 +69,12 @@ public class MetadataCache {
                 .recordStats()
                 .build();
 
+        appRulesCache = Caffeine.newBuilder()
+                .maximumSize(cfg.getMaxSize())
+                .expireAfterWrite(cfg.getMenuTtlMinutes(), TimeUnit.MINUTES)
+                .recordStats()
+                .build();
+
         log.info("MetadataCache initialized — metadata TTL={}m, menu TTL={}m, maxSize={}",
                 cfg.getMetadataTtlMinutes(), cfg.getMenuTtlMinutes(), cfg.getMaxSize());
     }
@@ -75,6 +83,10 @@ public class MetadataCache {
 
     public Optional<UiMetadataBundle> getUiMetadataBundle(String tenantId, String moduleId) {
         return Optional.ofNullable(uiMetadataBundleCache.getIfPresent(metaKey(tenantId, moduleId)));
+    }
+
+    public Optional<List<AppRules>> getAllAppRulesByType(String tenantId, String ruleType, String moduleId) {
+        return Optional.ofNullable(appRulesCache.getIfPresent(appRuleKey(tenantId, ruleType, moduleId)));
     }
 
     public Optional<ModuleMetadata> getModuleMetadata(String tenantId, String moduleId) {
@@ -132,5 +144,9 @@ public class MetadataCache {
 
     private String metaKey(String tenantId, String moduleId) {
         return tenantId + ":" + moduleId;
+    }
+
+    private String appRuleKey(String tenantId, String ruleType, String moduleId) {
+        return tenantId + ":" + ruleType + ":" + moduleId;
     }
 }
