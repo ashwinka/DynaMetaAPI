@@ -18,6 +18,7 @@ public class UiMetadataBundle {
     private JsonNode lookupMetadata;
     private JsonNode i18nTrans;
     private List<ColumnMetadata> fields = new ArrayList<>();
+    private List<AppRules> renderRules = new ArrayList<>();
     private Map<String, List<Map<String, Object>>> codeLists = new HashMap<>();
 
     public void setCodelists(Map<String, List<Map<String, Object>>> codeLists){
