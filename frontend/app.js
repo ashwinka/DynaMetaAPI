@@ -27,7 +27,7 @@ function registerAppClickEvents(){
 			if($(currMsCombo).hasClass('open')){
 				//If the previous search has some text then clear it while opening combo option drawer
 				$(currMsCombo).find('.md-ms-combo-search').val('')					
-				AppFORM.msSearch($(currMsCombo).find('.md-ms-combo-search')[0]);
+				AppFORM.msComboSearch($(currMsCombo).find('.md-ms-combo-search')[0]);
 				
 				$(currMsCombo).find('.md-ms-combo-search').focus();
 			}
@@ -61,14 +61,14 @@ function registerAppClickEvents(){
 		//Handle Generic multi-select combo option select handler [md-msc__option]
 		if($(e.target).parents('.md-msc__option')[0] || $(e.target).hasClass('md-msc__option')){
 			let mscOptCmp = $(e.target).hasClass('md-msc__option') ? e.target : $(e.target).parents('.md-msc__option')[0];
-			AppFORM.multiSelect(mscOptCmp);
+			AppFORM.msComboSel(mscOptCmp);
 			$(e.target).parents('.md-msc').find('.md-ms-combo-search').focus();
 		}
 		
 		//Handle Multi-select combo selcted value clear [md-ms-combo-clear]
 		if($(e.target).parents('.md-ms-combo-clear')[0] || $(e.target).hasClass('md-ms-combo-clear')){
 			let mscOptCmp = $(e.target).parents('.md-msc__tag')[0];
-			AppFORM.multiSelect(mscOptCmp);
+			AppFORM.msComboSel(mscOptCmp);
 		}
 		
 		
@@ -166,20 +166,20 @@ function registerAppClickEvents(){
 		if($('.case-edit-app .md-panel__header').has(e.target)[0] || $(e.target).hasClass('md-panel__header')){
 			//ls-table-field
 			let panelHeadCMp = $(e.target).hasClass('md-panel__header') ? e.target : $('.md-panel__header').has(e.target)[0];
-			AppFORM.toggle(panelHeadCMp);
+			AppFORM.togglePanel(panelHeadCMp);
 			
 		}
 		//Section Grid Panel collapse handler [md-grid__toolbar-left]
 		if($('.case-edit-app .md-grid__toolbar-left').has(e.target)[0] || $(e.target).hasClass('md-grid__toolbar-left')){
 			//ls-table-field
 			let panelHeadCMp = $(e.target).hasClass('md-grid__toolbar-left') ? e.target : $('.md-grid__toolbar-left').has(e.target)[0];
-			AppFORM.toggle(panelHeadCMp);
+			AppFORM.togglePanel(panelHeadCMp);
 			
 		}
 		
 		//Multi-Ctx grid Rec row checkbox click handler [multi-ctx-rec-wraper]
 		if($('.multi-ctx-rec-wraper').has(e.target)[0]){			
-			AppFORM.pick(e.target);
+			AppFORM.mcRecChk(e.target);
 		}
 		
 		//Form Multi-Ctx grid sort click handler [md-grid-col-sort]
@@ -226,7 +226,7 @@ function registerAppClickEvents(){
 		if($('.case-edit-app .md-grid .md-mc-rec-edit').has(e.target)[0] || $(e.target).hasClass('md-mc-rec-edit')){
 			//ls-table-field
 			let editBtn = $(e.target).hasClass('md-mc-rec-edit') ? e.target : $('.md-mc-rec-edit').has(e.target)[0];
-			AppFORM.mcEdit(editBtn);
+			AppFORM.mcRecEdit(editBtn);
 			
 		}
 		
@@ -234,7 +234,7 @@ function registerAppClickEvents(){
 		if($('.case-edit-app .mc-nav-back').has(e.target)[0] || $(e.target).hasClass('mc-nav-back')){
 			//ls-table-field
 			let editBtn = $(e.target).hasClass('mc-nav-back') ? e.target : $('.mc-nav-back').has(e.target)[0];
-			AppFORM.back(editBtn);
+			AppFORM.mcCtxback(editBtn);
 			
 		}
 		
@@ -272,7 +272,7 @@ function registerAppClickEvents(){
 
 			typingDelay = setTimeout(() => {
 				msComboSeaching = true;
-				AppFORM.msSearch(e.target);
+				AppFORM.comboSearch(e.target);
 				msComboSeaching = false;
 			}, msComboSeaching ? 1000 : 500);	
 			
@@ -304,7 +304,7 @@ function registerAppClickEvents(){
 		//Handle Main Form data fields changes
 		if($('.case-edit-app').has(e.target)[0]){
 			//console.log('Data Record field changes: ' + e.target.value);
-			AppFORM.edit(e.target);
+			AppFORM.editField(e.target);
 		}
 		
 		//Handle Linked Modules data fields changes
