@@ -2,6 +2,7 @@ package com.metadyna.metadata.repository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.metadyna.metadata.model.AppRules;
 import com.metadyna.metadata.model.ColumnMetadata;
 import com.metadyna.metadata.model.TableMetadata;
 import com.metadyna.metadata.model.UiMetadata;
@@ -242,6 +243,19 @@ public class MetadataRepository {
                 .build();
     }
 
+    private AppRules mapRules(java.sql.ResultSet rs) throws java.sql.SQLException {
+        //ID, MODULE_ID, RULE_ID, TRIGGER_FIELDS, CONTEXT_PATH, RULE_PARAMETERS, RULE_EXPRESSION
+        return AppRules.builder()
+                .id(rs.getString("ID"))
+                .moduleId(rs.getString("MODULE_ID"))
+                .ruleId(rs.getString("RULE_ID"))
+                .triggerFields(rs.getString("TRIGGER_FIELDS"))
+                .contextPath(rs.getString("CONTEXT_PATH"))
+                .ruleParameters(rs.getString("RULE_PARAMETERS"))
+                .ruleExpression(rs.getString("RULE_EXPRESSION"))
+                .build();
+    }
+
     private static ObjectMapper objectMapper;
     private JsonNode parseJson(String json) {
         if (json == null || json.isBlank()) return null;
@@ -250,5 +264,13 @@ public class MetadataRepository {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    // --------------------- AppRules repository -------------------
+    public List<AppRules> getAllAppRulesByType(String ruleType, String moduleId, JdbcTemplate jdbc) {
+        return jdbc.query("""
+                SELECT ID, MODULE_ID, RULE_ID, TRIGGER_FIELDS, CONTEXT_PATH, RULE_PARAMETERS, RULE_EXPRESSION
+                  FROM APP_RULES WHERE RULE_TYPE=? AND MODULE_ID=? AND IS_ACTIVE='Y' ORDER BY RULE_ID
+                """, (rs, n) -> mapRules(rs), ruleType, moduleId);
     }
 }
