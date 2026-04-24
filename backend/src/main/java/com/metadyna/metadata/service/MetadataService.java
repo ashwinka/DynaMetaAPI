@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -188,11 +189,14 @@ public class MetadataService {
 
             ModuleMetadata metadata = loadModuleMetadata(moduleId, tenantId);
 
+            List<AppRules> renderRules = getRulesByType("RENDERER", moduleId, tenantId);
+
             return UiMetadataBundle.builder()
                     .formMetadata(formMetadata)
                     .listingMetadata(listingMd)
                     .lookupMetadata(lkpMd)
                     .i18nTrans(i18nTrans)
+                    .renderRules(renderRules)
                     .fields(metadata.getColumns()).build();
         });
 
@@ -371,5 +375,16 @@ public class MetadataService {
                 .requiredField(r.getRequiredField() != null ? r.getRequiredField() : "N")
                 .listingAlias(r.getListingAlias())
                 .build();
+    }
+
+    //--------------------- App Rules services------------
+    public List<AppRules> getRulesByType(String ruleType, String moduleId, String tenantId){
+        return metadataCache.getAllAppRulesByType(tenantId, ruleType, moduleId).orElseGet(() -> {
+            JdbcTemplate jdbc = tenantDataSourceRegistry.getJdbcTemplate(tenantId);
+            List<AppRules> appRules = metadataRepository.getAllAppRulesByType(ruleType, moduleId, jdbc);
+
+            log.debug("Loaded App Rules: tenant={}, module={}, type={}", tenantId, moduleId, ruleType);
+            return appRules;
+        });
     }
 }
