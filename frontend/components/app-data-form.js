@@ -199,7 +199,82 @@
 		
 	}
 	
-	function handleFieldEditImpacts(fieldId){
+	function handleFieldEditImpacts(fieldId, inpCmp){
+		
+		console.log(_renderRulesComutations);
+		let fieldMd = _fieldsCache[fieldId];
+		let fieldImpacts = _activeForm.triggerFieldImpacts[fieldId];
+		if(!fieldImpacts){
+			return
+		}
+		
+		let currSecIdMap = _navStack.at(-1).ctxIds || {};
+		let renderRules = _activeForm.renderRules;
+		let impactRules = fieldImpacts.impactedRules;
+		let renderRuleResCache = _renderRulesComutations;
+		
+		for(let ruleId in impactRules){
+			let flPath = fieldMd.fieldPath
+			let ruleObj = renderRules[ruleId];
+			let computationCache = renderRuleResCache[ruleId];
+			if(!computationCache || computationCache.length == 0){
+				continue;
+			}
+			
+			ctxIdsToReEval = [];
+			if(flPath.indexOf('$') > 0){
+				//pick all the ctxIds matched ones and udate the result.
+				let repPathArr = getMultiCtxPathArr(flPath);
+				let currFlCtxIdMap = (repPathArr, currSecIdMap);
+				
+				for(let cacheRes of computationCache){
+					let resCtxIds = cacheRes.ctxPaths;
+					let matchedCtx = true;
+					for(let p of repPathArr){
+						if(!resCtxIds[p] || currFlCtxIdMap[p] != resCtxIds[p]){
+							matchedCtx = false;
+							break;
+						}
+					}
+					if(matchedCtx){
+						ctxIdsToReEval.push(cacheRes);
+					}
+				}
+			} else {
+				//iterate all the idPaths and update the result
+				ctxIdsToReEval = computationCache;
+			}
+			
+			let ruleExp = ruleObj.ruleExpression;
+			for(let cacheRes of ctxIdsToReEval){
+				let ruleRes = evaluateRuleExpression(ruleExp, _dataJson, cacheRes.ctxPaths, _fieldsCache);
+				if(cacheRes.result != ruleRes){
+					cacheRes.result = ruleRes;
+					
+					//toggle all the impacted fields and sections
+					let parentCmp = $('.md-section-content')[0]
+					if(inpCmp && $(inpCmp).parents('.multi-ctx-rec-wraper')[0]){
+						//toggle only fields which are part of multi-ctx row
+						parentCmp = $(inpCmp).parents('.multi-ctx-rec-wraper');
+					}
+					
+					let impactedFields = fieldImpacts.impactedFieldsRender;
+					let impactedSecs = fieldImpacts.impactedSectionsRender;
+					let impactClFields = fieldImpacts.impactedFieldCodelist;
+					let impactLkpFields = fieldImpacts.impactedFieldLookup;
+					let impactReadonlyFields = fieldImpacts.impactedFieldReadonly;
+					let impactGridActions = fieldImpacts.impactedGridActions;
+
+					if(impactedFields){
+						for(let flId in impactedFields){
+							$(parentCmp).find('.md-field-wrapper[field-id="'+flId+'"]').toggle();
+						}
+					}
+					
+				}
+				
+			}
+		}
 		
 		
 	}
@@ -228,7 +303,10 @@
 			ctxObj[flName] = 'Y';
 			editCtxObj[flName] = 'Y';
 		}
-		$(switchCmp).toggleClass('on')
+		$(switchCmp).toggleClass('on');
+		
+		
+		handleFieldEditImpacts(fieldId, switchCmp)
 	}
 	
 	function formFieldChangeHandler(inpCmp){
@@ -268,6 +346,8 @@
 		}
 		editCtxObj[flName] = inpVal;		
 		
+		
+		handleFieldEditImpacts(fieldId, inpCmp)
 	}
 	
 	function clearLookupValue(clrBtn){
@@ -348,6 +428,8 @@
 			$(clrBtn).parents('.md-lookup').find('.md-lkp__tags').html(_getLkpSelValTags([], []));		
 		}
 		
+		
+		handleFieldEditImpacts(fieldId, clrBtn);
 	}
 	
 	function openLookupModule(lkpBtn){
@@ -486,6 +568,9 @@
 			}
 				
 			closeLookup();
+			
+			
+			handleFieldEditImpacts(fieldId, lkpBtn);
 		});
 	}
 	
@@ -973,11 +1058,12 @@
 
 			//Evaluate renderConditions
 			let renderRules = _activeForm.renderRules;
+			let hideField = false;
 			if(field.renderCondition && renderRules[field.renderCondition]){
 				let renderRule = renderRules[field.renderCondition];
 				let rulePassed = evaluateRenderRules(renderRule, _dataJson, ctxIds, _renderRulesComutations, _fieldsCache);			
 				if(!rulePassed){
-					return;
+					hideField = true;
 				}
 				
 			}
@@ -985,7 +1071,7 @@
 			const w = field.fieldWidth;
 			const label = AppI18N.mT(field.label, _moduleId);
 			
-			fl.push('<div class="md-field md-field-wrapper '+ ((w==3&&'md-field--full') || (w==2&&'md-field--half')) +'" field-id="'+field.fieldId+'">')
+			fl.push('<div class="md-field md-field-wrapper '+ ((w==3&&'md-field--full') || (w==2&&'md-field--half')) +'" field-id="'+field.fieldId+'" style="display:'+(hideField ? 'none' : '')+'">')
 			
 			
 			//Field label
@@ -1161,20 +1247,21 @@
 				//Cache fields
 				_fieldsCache[fl.fieldId] = fl;
 				
-				gb.push('		<td class="md-field-wrapper " style="width: '+(fl.columnSize || '22ch')+';" field-id="'+fl.fieldId+'" >');
+				gb.push('		<td class="md-field-col" style="width: '+(fl.columnSize || '22ch')+';" field-id="'+fl.fieldId+'" >');
 				
 				
 				//Evaluate if the field is having renderCondition
+				let hideField = false;
 				if(fl.renderCondition && renderRules[fl.renderCondition]){
 					let renderRule = renderRules[fl.renderCondition];
 					let rulePassed = evaluateRenderRules(renderRule, _dataJson, navObj.ctxIds, _renderRulesComutations, _fieldsCache);			
 					if(!rulePassed){
-						continue;
+						hideField = true;
 					}					
 				}
-					
-			
+				gb.push('		  <div class="md-field-wrapper" field-id="'+fl.fieldId+'" style="display:'+(hideField ? 'none':'')+'">');				
 				gb.push(			_buildInput(fl, _dataJson, navObj.ctxIds));	
+				gb.push('		  </div>');
 				gb.push('		</td>');
 			}			
 			gb.push('		</tr>');
