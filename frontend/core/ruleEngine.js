@@ -29,7 +29,7 @@ function evaluateRenderRules(renderRule, dataJson, ctxIds, ruleResCache, flCache
 	}
 	
 	let cachedResults = ruleResCache[renderRule.ruleId];
-	if(Array.isArray(cachedResults) && cachedResults.length > 0){		
+	if(Array.isArray(cachedResults) && cachedResults.length > 0){
 		if(repPaths.length == 0){
 			return cachedResults[0].result
 		} else {
@@ -43,8 +43,7 @@ function evaluateRenderRules(renderRule, dataJson, ctxIds, ruleResCache, flCache
 	}
 	
 	
-	try{
-		
+	try{		
 		rulePassed = evaluateRuleOnCtxPaths(renderRule, dataJson, repPaths, ctxIdMap, ctxIdTree, ruleResCache, flCache, false);
 	}catch(err){
 		console.log('Error while evaluating the rule: ' + renderRule.ruleId)
@@ -61,16 +60,18 @@ function evaluateRuleOnCtxPaths(renderRule, dataJson, repPaths, ctxIds, ctxIdTre
 		ruleResult = evaluateRuleExpression(ruleExp, dataJson, ctxIds, flCache);
 		
 		let resCtxIdArr = [];
+		let ctxIdMap = {};
 		for(let repP of repPaths){
 			if(ctxIds[repP]){
 				resCtxIdArr.push(ctxIds[repP]);
+				ctxIdMap[repP] = ctxIds[repP];
 			}
 		}
 		
 		if(!ruleResCache[renderRule.ruleId]){
 			ruleResCache[renderRule.ruleId] = [];
 		}
-		ruleResCache[renderRule.ruleId].push({ctxIdStr:resCtxIdArr.join('|'), result:ruleResult});
+		ruleResCache[renderRule.ruleId].push({ctxIdStr:resCtxIdArr.join('|'), ctxPaths:ctxIdMap, result:ruleResult});
 		
 	} else {
 		//Iterate the ctxIdTree and resolve one by one and cache the result.
@@ -158,4 +159,28 @@ function evaluateRuleExpConddData(lhsVal, opr, rhsVal){
 	
 	
 	return evalRes;
+}
+
+
+function getMultiCtxPathArr(fieldPath){
+	let repPaths = [];
+	let pathSplit = fieldPath.split('.');
+	for(let p of pathSplit){
+		if(p.indexOf('$') > 0){
+			repPaths.push(p);			
+		}
+	}
+	return repPaths;
+}
+
+function getMultiCtxIdStr(multiCtxPathArr, ctxIds){
+	
+	let resCtxIdArr = [];
+	let ctxIdMap = {};
+	for(let repP of multiCtxPathArr){
+		if(ctxIds[repP]){
+			resCtxIdArr.push(ctxIds[repP]);			
+		}
+	}
+	return resCtxIdArr.join('|');
 }
