@@ -1,16 +1,30 @@
 
 MetaDyna UI Framework:
 	
-	This is the UI Framework which is designed to render all the Menus (Menu metadata), screens and UI components based on the Module Metadata.
+	This is the enterpraise UI Framework application which is designed to render the whole application from metadata.
+	Application has mainly 3 components
+		1. Menus (Menu metadata which is derived from Modules), 
+		2. Listing screens with dashboard widgets
+		3. Record Edit Forms screens with multiple UI components.
 	
 	This Framework will provide the look and feel of MUI components layout and styles.
-	Framework must be built using HTML, Javascript, Jquery and css.
-	This Framework is a kind of single page applcaition and composed of 2 main screens(html files) which is login screen (login.html) and Application Screen (index.html)
 	
-	Framework must support offline mode, where _apiBaseUrl is not configure in apiConfig.js file then its offline mode.
-		In Offline mode all the menu_registry, module metadata will be dynamically loaded using dynamic js script tag which will be detailed later.
+	Framework has been build primarily using HTML, Javascript, Jquery.
 	
-	This Framework has 5 Major components in form of <div> placeholders in the application page (index.html) to render the same
+	This Framework is designed with the concept of single page applcaition and composed of 2 main screens(html files) which is login screen (login.html) and Application Screen (app.html)
+	
+	Framework must support offline mode, where CONFIG_API_BASE_URL is not configure in app-config.js file then its offline mode.
+		In Offline mode all the menu_registry, module metadata will be dynamically loaded using dynamic js script tag inject which will be detailed later.
+	
+	Application will launched from login.html page and then redirected to app.html page after login successfull.
+		Application URL must contain the tenantId (?tenantId=PV_T1 )in the URL
+		Post successfull Login Application will load from backend and cached with local memory
+			1. Session info
+			2. Menu registry.
+			3. moduleVersionInfo json.
+			
+	
+	app.html has 5 Major components in form of <div> placeholders in the application page (app.html) to render the same
 		1. App Header:
 			Its the App Bar which renders at the top of the screen which has Menu icon, App Name, Navigated Module Name, User Icon and Logout icon.
 		
@@ -183,7 +197,7 @@ MetaDyna UI Framework:
 					Server will respond with Token, Menu_registry
 					Add token, tenantId and Menu registry to session store.
 				
-		2.	Application Page (index.html)
+		2.	Application Page (app.html)
 			If the session store do not have token or tenantId then redirect to Login page.
 			Render rhe Menu drawer from cached session sore menu registry.
 			Open or navigate to the first menu item as default.
@@ -262,7 +276,26 @@ MetaDyna UI Framework:
 		9. Context Partial Render:
 			Framework must not render the whole sections in one go, rather on selection and navigation the respective sections must be rendered.
 			
+	Rule engine and conditional render:
+		field metadata:
+			renderCondition: ruleID
 			
+		section metadata:
+			renderCondition: ruleID
+			
+		renderRules:[]
+		
+		
+		1. while loadign form metadata package
+			resolve the render condition rules and derive fieldImpacts based on trigger fields by doign reverse mapping between trigger fields and renderCond fields/sections.
+			triggerFieldImpacts[fieldId] --> associated rules, fields, sections, readonly fields, grid actions
+			
+		
+		2. While rendering the form on rendering fields/sections evaluate the rule and cache resuts(renderRuleComputation) with ruleID and ctx-ids map
+
+		3. whenever the field is edited then run all the rules associated with edited field from the triggerFieldImpacts and update the rule results cache and toggle the target component render
+		
+				
 			
 			
 
@@ -275,3 +308,30 @@ Metadata JSON Structure:
 	I18nTrans Metadata: for all above refer Ui_metadata.txt
 	
 
+
+
+TO-DO:
+
+1. Render Conditions on fields and sections
+2. Render conditions for dynamic codelist and lookup
+3. Render conditions for readonly or required
+4. Render conditions for Grid operations.
+
+5. fieldEditConfirmations
+6. Default value populations for new module record or multi-context record.
+7. Metadata version manager
+8. Fields render:
+	multi sel combo,  - done, ref Module-TO-DO
+	multi field combo,  - done, API values to-do
+	pair fields, 
+	NF and SF fields
+	Multi lingual fields.
+9. Listing screen:
+		Basic Search needs to be added
+		widget needs to be refreshed
+		Export
+		
+	Form Grid: 
+		selectAll, search
+10. Backend save validation errors integration with UI and field navigations.
+11. 
