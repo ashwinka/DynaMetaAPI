@@ -271,6 +271,13 @@
 						}
 					}
 					
+					for(let secId in impactedSecs || {}){
+						$('.md-panel[section-id="'+secId+'"]').toggle();
+						$('.md-grid[section-id="'+secId+'"]').toggle();
+						$('.md-tab[data-tab-id="'+secId+'"]').toggle();
+						$('.md-nav__item[data-section-id="'+secId+'"]').toggle();
+					}
+					
 				}
 				
 			}
@@ -875,11 +882,14 @@
 			// Tab sections
 			for (const ts of tabSections) {
 				_sectionCache[ts.sectionId] = ts;
-				tabs.push({ id: ts.sectionId, label: AppI18N.mT(ts.title, _moduleId) || ts.sectionId});
+				tabs.push({ id: ts.sectionId, label: AppI18N.mT(ts.title, _moduleId) || ts.sectionId, renderCondition:ts.renderCondition});
 			}
 		}
 		
 		if (tabs.length > 0) {
+			
+			
+			
 			
 			//Setting first as active
 			if(!_navStack.at(-1).tabSecId){
@@ -891,10 +901,25 @@
 			}
 			
 			for (const tab of tabs) {
-				tb.push('<div class="md-tab '+(tab.activeTab ? 'active':'')+'" data-tab-id="'+tab.id+'">'+tab.label+'</div>');				  
-			}
+				let hideTab = false;
+				if(tab.renderCondition){
+					let renderRules = _activeForm.renderRules;
+					
+					if(renderRules[tab.renderCondition]){
+						let navObj = _navStack.at(-1);
+						let ctxIds = navObj.ctxIds || {};
 			
-									
+						let renderRule = renderRules[tab.renderCondition];
+						let rulePassed = evaluateRenderRules(renderRule, _dataJson, ctxIds, _renderRulesComutations, _fieldsCache);			
+						if(!rulePassed){
+							hideTab = true;
+						}						
+					}
+				}
+			
+				tb.push('<div class="md-tab '+(tab.activeTab ? 'active':'')+'" data-tab-id="'+tab.id+'" style="display:'+(hideTab?'none':'')+'">'+tab.label+'</div>');				  
+			}
+												
 		}
 		return tb.join('');
 		
@@ -1003,8 +1028,24 @@
 		//Render section field panel
 		if(fields && fields.length > 0){
 			
+			let hideSec = false;
+			if(secMd.renderCondition){
+				let renderRules = _activeForm.renderRules;				
+				if(renderRules[secMd.renderCondition]){
+					let renderRule = renderRules[secMd.renderCondition];
+					let navObj = _navStack.at(-1);
+					let ctxIds = navObj.ctxIds || {};
+						
+					let rulePassed = evaluateRenderRules(renderRule, _dataJson, ctxIds, _renderRulesComutations, _fieldsCache);			
+					if(!rulePassed){
+						hideSec = true;
+					}
+					
+				}
+			}
+			
 			let currSp = [];
-			currSp.push('<div class="md-panel" section-id="'+secMd.sectionId+'">');
+			currSp.push('<div class="md-panel" section-id="'+secMd.sectionId+'" style="display:'+(hideSec?'none':'')+'">');
 			//Panel Header
 			currSp.push('	<div class="md-panel__header">');
 			currSp.push('	  <span class="md-panel__chevron">' + icon('chevronDown') + '</span>');
@@ -1049,7 +1090,7 @@
 			
 		} else {
 			//Cache the field
-			_fieldsCache[field.fieldId] = field;
+			//_fieldsCache[field.fieldId] = field;
 			
 			//Get the multi-ctx id map from _navStack[ctxIds]
 			let navObj = _navStack.at(-1);
@@ -1245,7 +1286,7 @@
 			
 			for(let fl of gf){
 				//Cache fields
-				_fieldsCache[fl.fieldId] = fl;
+				//_fieldsCache[fl.fieldId] = fl;
 				
 				gb.push('		<td class="md-field-col" style="width: '+(fl.columnSize || '22ch')+';" field-id="'+fl.fieldId+'" >');
 				
@@ -1325,9 +1366,26 @@
 	function _renderMultiCtxGrid(md, parentCmp){
 		let gridState = _getGridState(md.contextPath);
 		let gridRecs = _getMultiCtxRecs(md) || [];
+		
+		let hideGrid = false;
+		if(md.renderCondition){
+			let renderRules = _activeForm.renderRules;				
+			if(renderRules[md.renderCondition]){
+				let renderRule = renderRules[md.renderCondition];
+				let navObj = _navStack.at(-1);
+				let ctxIds = navObj.ctxIds || {};
+					
+				let rulePassed = evaluateRenderRules(renderRule, _dataJson, ctxIds, _renderRulesComutations, _fieldsCache);			
+				if(!rulePassed){
+					hideGrid = true;
+				}
+				
+			}
+		}
+			
 			
 		let fg = [];
-		fg.push('<div class="md-grid multi-ctx-section" section-id="'+md.sectionId+'">');
+		fg.push('<div class="md-grid multi-ctx-section" section-id="'+md.sectionId+'" style="display:'+(hideGrid?'none':'inherit')+'">');
 		
 		fg.push(buildFormGridToolbar(md, gridState));
 		fg.push(buildFormGrid(md, gridRecs, gridState));
@@ -1425,7 +1483,8 @@
 				hd.push('  	 <div class="md-dropdown__menu" style="min-width:180px;">');
 				for (const fId of fms) {
 				  const f = _formMD.FORMS[fId];
-				  hd.push(`  	 <div class="menu-btn-cmp md-form-switch-item md-dropdown__menu__item ${fId === _activeForm.formId ? 'md-lang-active':''}" formId=${fid}> </div>`);				  
+				  if(_activeForm.formID === fId){continue;}
+				  hd.push(`  	 <div class="menu-btn-cmp md-form-switch-item md-dropdown__menu__item ${fId === _activeForm.formId ? 'md-lang-active':''}" formId=${fId}>${f.formName}</div>`);				  
 				}
 				hd.push('    </div> ');
 				
@@ -1489,7 +1548,19 @@
 		
 		np.push('		<div class="md-nav__list">');
 		for (const sec of (_activeForm.sections || [])) {
-			np.push('		<div class="md-nav__item" data-section-id="'+sec.sectionId+'">');
+			let hideNavItem = false;
+			if(sec.renderCondition){
+				let renderRules = _activeForm.renderRules;				
+				if(renderRules[sec.renderCondition]){
+					let renderRule = renderRules[sec.renderCondition];
+					let rulePassed = evaluateRenderRules(renderRule, _dataJson, {}, _renderRulesComutations, _fieldsCache);			
+					if(!rulePassed){
+						hideNavItem = true;
+					}
+					
+				}
+			}
+			np.push('		<div class="md-nav__item" data-section-id="'+sec.sectionId+'" style="display:'+(hideNavItem ? 'none' : '')+'">');
 			np.push('			<span class="md-nav__item-icon">' + sec.multiContext ? icon('grid') : icon('chevronRight') + '</span>');
 			np.push('			<span>' + (AppI18N.mT(sec.title, _moduleId) || sec.sectionId) + '</span>');
 			np.push('		</div>');
@@ -1534,7 +1605,7 @@
 	
 	function switchForm(menuCmp){
 		let formId = menuCmp.getAttribute('formId');
-		if(!formId || _formMD.FORMS[formId])return;
+		if(!formId || !_formMD.FORMS[formId])return;
 		
 		_activeForm = _formMD.FORMS[formId];
 	
@@ -1574,14 +1645,15 @@
 		
 		//Load the Form Metadata
 		let formMeta = await AppMD.forms(item.moduleId);
+		let moduleFields = await AppMD.fields(item.moduleId);
 		
-		if(!formMeta?.FORMS || Object.values(formMeta?.FORMS).length === 0){
+		if(!formMeta?.FORMS || Object.values(formMeta?.FORMS).length === 0 || !moduleFields || Object.values(moduleFields).length == 0){
 			$('.case-edit-overlay').removeClass('active');			
 			return;
 		}
 		_formMD = formMeta;
 		_moduleId = item.moduleId;
-		
+				
 		//Load the form data from backend
 		if(!recId){
 			_recId = generateUUID();
@@ -1596,6 +1668,7 @@
 		}
 		
 		_activeForm = Object.values(_formMD.FORMS)[0];		
+		_fieldsCache = _activeForm.fieldsCache;
 		_renderRulesComutations = {};
 		_buildFormPage();
 		console.log(_dataJson);
