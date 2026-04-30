@@ -10,7 +10,7 @@
 			render_as: "text/textarea/numeric/date/combo/ms-combo/radio/checkbox/bool-switch/lookup/ms-lookup/type-ahead/html-editor"
 			codelist: "codelist id",
 			dataValues:[],//instead of codeist static data values array with code and decode can be maintained.
-			lookup_module:"module ID of the reference module",
+			lookup_module:"module ID of the _renderLookup module",
 				storeValField: "data json field name where the store value for lookup needs to be stores",
 				lkpStoreField: "field name of lookup records which is used for store value",
 				lkpDispField: "field name of lookup records which is used for display value",
@@ -213,7 +213,7 @@ function _renderLookup(flMd, val, dataJson, ctxIds) {
 	let lkpDispValField = flMd.lkpDispValField || lkpStoreValField;
 			
 	let secPath = flPath.indexOf('.') > 0 ? flPath.substr(0, flPath.lastIndexOf('.')) : null;
-	let ctxObj = getCtxByPath(secPath, dataJson, ctxIds);
+	let ctxObj = (dataJson && getCtxByPath(secPath, dataJson, ctxIds)) || {};
 	let dispVals = [];
 	let storeVals = [];
 	
