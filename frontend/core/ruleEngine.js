@@ -55,27 +55,36 @@ function evaluateRenderRules(renderRule, dataJson, ctxIds, ruleResCache, flCache
 function evaluateRuleOnCtxPaths(renderRule, dataJson, repPaths, ctxIds, ctxIdTree, ruleResCache, flCache, anyOneMatch){
 	let ruleResult = false;
 	let ruleExp = renderRule.ruleExpression;
-	if(repPaths.length > 0 && Object.keys(ctxIds).length === repPaths.length){
-		//ALl the multi-context pats are resolved
-		ruleResult = evaluateRuleExpression(ruleExp, dataJson, ctxIds, flCache);
-		
-		let resCtxIdArr = [];
-		let ctxIdMap = {};
-		for(let repP of repPaths){
-			if(ctxIds[repP]){
-				resCtxIdArr.push(ctxIds[repP]);
-				ctxIdMap[repP] = ctxIds[repP];
+	if(repPaths.length > 0){
+		if(Object.keys(ctxIds).length === repPaths.length){
+			//ALl the multi-context pats are resolved
+			ruleResult = evaluateRuleExpression(ruleExp, dataJson, ctxIds, flCache);
+			
+			let resCtxIdArr = [];
+			let ctxIdMap = {};
+			for(let repP of repPaths){
+				if(ctxIds[repP]){
+					resCtxIdArr.push(ctxIds[repP]);
+					ctxIdMap[repP] = ctxIds[repP];
+				}
 			}
+			
+			if(!ruleResCache[renderRule.ruleId]){
+				ruleResCache[renderRule.ruleId] = [];
+			}
+			ruleResCache[renderRule.ruleId].push({ctxIdStr:resCtxIdArr.join('|'), ctxPaths:ctxIdMap, result:ruleResult});
+			
+		} else {
+			//Iterate the ctxIdTree and resolve one by one and cache the result.
 		}
-		
+	} else {
+		ruleResult = evaluateRuleExpression(ruleExp, dataJson, ctxIds, flCache);
 		if(!ruleResCache[renderRule.ruleId]){
 			ruleResCache[renderRule.ruleId] = [];
 		}
-		ruleResCache[renderRule.ruleId].push({ctxIdStr:resCtxIdArr.join('|'), ctxPaths:ctxIdMap, result:ruleResult});
-		
-	} else {
-		//Iterate the ctxIdTree and resolve one by one and cache the result.
+		ruleResCache[renderRule.ruleId].push({ctxIdStr:'', ctxPaths:{}, result:ruleResult});
 	}
+	
 	
 	return ruleResult;
 }
