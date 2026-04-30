@@ -228,3 +228,31 @@ TABLE_COLUMN_METADATA:
 	ICSR		150			150002		COMPANY_CAUSALITY		companyRate		TEXT		100			Y 
 
 	
+
+
+TO-DOs:
+
+1. Backend save:
+		data type convertion date and numeric
+		data validations as per DB constraints
+			max-length
+			required
+			
+2. MetadataVersionInfo manager
+	
+3. Rule engine : Conditional/Validation/Data-Derivation
+	
+4. Workflow Engine: Simple Generic WF engine to handle the status and status history. 
+		on-entry and on-exit validations and derivations.
+		auto-completion support on next activities.
+
+5. Json-Json mapper engine.
+	
+6. JSON and JSON Array import 
+	
+7. XML import
+	
+8. Excel import with template support
+
+9. Event handlers from forms to raise events like 
+		create case from lit or email case, create correspondence, create distribution request, WF transistions
