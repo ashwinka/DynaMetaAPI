@@ -40,21 +40,25 @@ function registerAppClickEvents(){
 		
 		//Handle Generic Menu item click handlers
 		if($('.md-dropdown__menu__item').has(e.target)[0] || $(e.target).hasClass('md-dropdown__menu__item')){
-			if(currMenuWrap[0] && currMenuWrap[0].getAttribute('menu-handler')){
-				let menuItemCmp = null;
-				if($('.md-dropdown__menu__item').has(e.target)[0]){
-					menuItemCmp = $('.md-dropdown__menu__item').has(e.target)[0];
-				} else if($(e.target).hasClass('md-dropdown__menu__item')){
-					menuItemCmp =  e.target;
-				}
-				if(menuItemCmp && currMenuWrap[0].getAttribute('menu-handler')){
-					if (typeof window[currMenuWrap[0].getAttribute('menu-handler')] === "function") {
-						window[currMenuWrap[0].getAttribute('menu-handler')](menuItemCmp); // Call the function dynamically
-					}
-					
-					
-				}
+			currMenuWrap = $(currMenuWrap[0]).parents('.menu-wrapper')[0];
+			let menuHandler = currMenuWrap.getAttribute('menu-handler');
+			if(currMenuWrap && menuHandler){
+				let menuItemCmp = $(e.target).hasClass('md-dropdown__menu__item') ? e.target : $(e.target).parents('.md-dropdown__menu__item')[0];
 				
+				if(menuItemCmp){
+					
+					if(menuHandler.indexOf('.') > 0){
+						let handlerSplit = menuHandler.split('.');
+						if(handlerSplit.length > 1 && window[handlerSplit[0]] && typeof window[handlerSplit[0]][handlerSplit[1]] === 'function' ){
+							menuHandler = window[handlerSplit[0]][handlerSplit[1]];
+						}
+					} else if(window[menuHandler] === "function"){
+						menuHandler = window[menuHandler];
+					}
+					if (typeof menuHandler === "function") {
+						menuHandler(menuItemCmp); // Call the function dynamically
+					}
+				}
 			}
 		}
 		
