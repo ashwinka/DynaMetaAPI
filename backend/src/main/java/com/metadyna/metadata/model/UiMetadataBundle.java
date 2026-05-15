@@ -1,6 +1,7 @@
 package com.metadyna.metadata.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.metadyna.rulesManager.AppRules;
 import lombok.Builder;
 import lombok.Getter;
 
