@@ -10,6 +10,7 @@ import com.metadyna.common.exception.ResourceNotFoundException;
 import com.metadyna.metadata.cache.MetadataCache;
 import com.metadyna.metadata.model.*;
 import com.metadyna.metadata.repository.MetadataRepository;
+import com.metadyna.rulesManager.AppRules;
 import com.metadyna.tenant.service.TenantDataSourceRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -317,12 +317,15 @@ public class MetadataService {
                     .filter(t -> t.getParentTableId() != null && !t.getParentTableId().isBlank())
                     .collect(Collectors.groupingBy(TableMetadata::getParentTableId));
 
+            Map<String, ColumnMetadata> allFieldsIndex = columns.stream().collect(Collectors.toMap(ColumnMetadata::getFieldId, c -> c));
+
             ModuleMetadata metadata = ModuleMetadata.builder()
                     .moduleId(moduleId)
                     .tables(tables)
                     .columns(columns)
                     .tableIndex(tableIndex)
                     .columnIndex(columnIndex)
+                    .allFieldsIndex(allFieldsIndex)
                     .tableIndexByParent(tableIndexByParent)
                     .build();
 
