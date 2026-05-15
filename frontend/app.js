@@ -273,6 +273,14 @@ function registerAppClickEvents(){
 			AppFORM.errorWin(errBtn);
 			
 		}
+
+		//Error window field navigation [err-nav-btn]
+		if($(e.target).parents('.case-edit-app')[0] && ($(e.target).parents('.err-nav-btn')[0] || $(e.target).hasClass('err-nav-btn'))){
+			//ls-table-field
+			let errBtn = $(e.target).hasClass('err-nav-btn') ? e.target : $('.err-nav-btn').has(e.target)[0];
+			AppFORM.fieldNavigate(errBtn);
+			
+		}
 	});
 	
 	document.addEventListener('input', function(e) {
