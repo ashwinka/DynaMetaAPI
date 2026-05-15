@@ -30,6 +30,42 @@
 		return (cur !== null && cur !== undefined && String(cur).trim() !== '') ? String(cur) : null;
 	}
 	
+	function getMultiCtxDispKeyData(secId, ctxIds){
+		let secMd = _sectionCache[secId];
+		if(!secMd || !secMd.multiContext || !secMd.contextPath || secMd.contextPath.indexOf('$') < 0 || !ctxIds){
+			return;
+		}
+
+		let secPath = secMd.contextPath;
+		let repPathArr = getMultiCtxPathArr(secPath);
+		for(let p of repPathArr){
+			if(!ctxIds[p]){
+				return '';
+			}
+		}
+
+		let ctxObj = getCtxByPath(secPath, _dataJson, ctxIds);
+		let keyDataArr = [];
+		if(ctxObj){
+			let flCache = _activeForm.fieldsCache;
+			let keyDispFls = (secMd.displayKeyFields && secMd.displayKeyFields.split('|')) || (secMd.gridFields && [secMd.gridFields[0].fieldId]);
+			for(let f of keyDispFls){
+				flMd = flCache[f];
+				if(flMd && ctxObj[flMd.fieldName]){
+					if(flMd.codelist){
+						keyDataArr.push(AppI18N.clT(ctxObj[flMd.fieldName], flMd.codelist, ctxObj[flMd.fieldName]));
+					} else {
+						keyDataArr.push(ctxObj[flMd.fieldName]);
+					}
+					
+				}
+			}
+		
+		}
+		return keyDataArr.join(', ');
+
+	}
+
 	function icon(name, extraClass = '') {
 		const svg = ICONS[name] || ICONS.info;
 		if (extraClass) {
@@ -38,7 +74,82 @@
 		return svg;
 	}
 	
-	function showErrorPopup(){
+	function fieldNavigation(flCmp){
+		let fieldId = flCmp.getAttribute('field-id');
+		let errId = flCmp.getAttribute('err-id');
+		let errorObj = _errors.find(e=>e.id==errId);
+		if(errorObj){
+			performFieldNavigation(errorObj.fieldId, errorObj.ctxIds);
+		}
+	}
+
+	function performFieldNavigation(fieldId, ctxIds){
+		let flMd = _activeForm.fieldsCache[fieldId];
+		if(!flMd){
+			return;
+		}
+		$('#errorPopupBackdrop').hide();
+
+		let flPath = flMd.fieldPath;
+		if(flPath.indexOf('$') > 0){
+			//Validate all the multi-ctx path can be resolved with ids
+			let repPathArr = getMultiCtxPathArr(flPath);
+			for(let repPath of repPathArr){
+				if(!ctxIds[repPath]){
+					return;
+				}
+			}
+		}
+
+		let secPathArr = flMd.sectionPath?.split('.') || [];
+		let navStkNew = [];
+
+		if(secPathArr.length == 0){
+			return;
+		}
+
+		navStkNew.push({sectionId: secPathArr[0]});
+		
+		//Set Tab section
+		if(secPathArr.length > 1){
+			let secMd = _sectionCache[secPathArr[1]];
+			if(secMd && secMd.tabPanel){
+				navStkNew[0].tabSecId = secPathArr[1];
+			}			
+		}
+		
+		let prevNavObj = null;
+		for(let i=1; i<secPathArr.length; i++){
+			let secMd = _sectionCache[secPathArr[i]];
+			if(secMd && secMd.multiContext){
+				let navObj = {sectionId: secPathArr[1], mcRecId:ctxIds[secMd.contextPath]};
+				let ctxIdMap = {};
+				
+				if(prevNavObj && prevNavObj.ctxIds){
+					ctxIdMap = {...prevNavObj.ctxIds};				
+				}
+				ctxIdMap[secMd.contextPath] = ctxIds[secMd.contextPath];
+				navObj.ctxIds = ctxIdMap;
+				navStkNew.push(navObj);
+
+				prevNavObj = navObj
+			}
+		}
+		
+		_navStack = navStkNew;
+		renderSectionDetailsPanel();
+		
+
+		if($('.md-section-content .md-field[field-id="'+fieldId+'"]')[0]){
+			$('.md-section-content .md-field[field-id="'+fieldId+'"]').removeClass('md-input-highlight');
+			void $('.md-section-content .md-field[field-id="'+fieldId+'"]')[0].offsetWidth;
+			$('.md-section-content .md-field[field-id="'+fieldId+'"]').addClass('md-input-highlight');
+		}
+		
+
+	}
+
+	function buildErrorPopup(){
 		let errorJson = _errors;
 		if (!errorJson || errorJson.length === 0) return;
 
@@ -66,16 +177,19 @@
 		const priority = { ERROR: 1, WARNING: 2, INFO: 3 };
 
 		// Count by type
+		let recId = new Date().getTime();
 		const counts = { ERROR: 0, WARNING: 0, INFO: 0 };
-		errorJson.forEach(e => { const t = e.severity || 'ERROR'; if (counts[t] !== undefined) counts[t]++; });
+		errorJson.forEach(e => { const t = e.severity || 'ERROR'; e.id=!e.id ? recId : e.id; recId++; if (counts[t] !== undefined) counts[t]++; });
 		const total = counts.ERROR + counts.WARNING + counts.INFO;
 
 		// Build rows grouped by type order: error → warning → info
 		sorted = errorJson.sort((a, b) => priority[a.severity] - priority[b.severity]);
 		
+		
 		const rows = sorted.map(e => {
 			const cfg = ERR_TYPE[e.severity || 'ERROR'];
-			const ctxParts = 'CTX'
+			const ctxParts = 'CTX';
+
 			return `
 			<div class="err-row ${cfg.rowClass}">
 				<div class="err-row__icon" style="color:${cfg.iconColor}">${cfg.icon}</div>
@@ -91,13 +205,12 @@
 						
 					</div>
 				</div>
-				<button class="err-nav-btn" title="Go to field"
-					onclick="navigateToField('${e.fieldId}', ${JSON.stringify(e.ctxIds || {})})">
+				<span class="err-nav-btn" title="Go to field" field-id="${e.fieldId}" err-id='${e.id}' onclick="AppFORM.fieldNavigate(this)">
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<polyline points="9 18 15 12 9 6"/>
 					</svg>
 					Go to field
-				</button>
+				</span>
 			</div>`;
 		}).join('');
 
@@ -118,7 +231,10 @@
 		
 		$('#errorPopupBackdrop #errPopupTitle').html(`<span>${headerCfg.icon}</span>${headerTitle}<span style="display:flex; gap:4px; margin-left:4px;    align-items: center;flex-direction: row;">${countBadges.join('')}</span>`);
 		$('#errorPopupBackdrop .err-summary').html(summaryMsg)
-		$('#errorPopupBackdrop .err-list').html(rows)
+		$('#errorPopupBackdrop .err-list').html(rows);
+		
+	}
+	function showErrorPopup(){	
 		
 		$('#errorPopupBackdrop').show();
 	}
@@ -133,8 +249,23 @@
 		for(let sec of _navStack){
 			let secMd = _sectionCache[sec.sectionId];
 			if(secMd){
-				bc.push(`<span class="md-breadcrumb__item">${AppI18N.mT(secMd.title, _moduleId)}</span>`);
+				if(secMd.multiContext && sec.mcRecId){
+					// bc.push(`<div style="display:flex;flex-direction: row;gap: 4px;align-items: center;">
+					// 	<span class="md-breadcrumb__item">Reporter Information</span>
+					// 	<select style="height: 16px;font-size: 11px;max-width: 100px;" class="breadcrum-mc-select">
+					// 		<option>Brooks</option>
+					// 	</select>
+					// </div>`);
+
+
+					let mcDisKeyData = getMultiCtxDispKeyData(sec.sectionId, sec.ctxIds);
+					bc.push(`<span class="md-breadcrumb__item">${AppI18N.mT(secMd.title, _moduleId)}[${mcDisKeyData}]</span>`);
+				} else {
+					bc.push(`<span class="md-breadcrumb__item">${AppI18N.mT(secMd.title, _moduleId)}</span>`);
+				}	
+				
 			}
+			
 		}
 		return bc.join(' / ');
 	}
@@ -1062,7 +1193,11 @@
 		_errors = respJson.data.errors || [];
 		if(_errors?.length > 0){
 			window.MDUtils.toast('Saved successfully partially with the errors.', 'warning', 'Saved');
+			buildErrorPopup();
 			showErrorPopup();
+			$('#case-edit-app .app-bar__err-btn').show();
+			$('#case-edit-app .app-bar__err-btn .app-bar__err-count').text(_errors.length);
+			
 		} else {
 			window.MDUtils.toast('Saved successfully.', 'success', 'Saved');
 		}
@@ -1686,7 +1821,7 @@
 		  <div class="md-breadcrum-items-wrap" style="display: flex;align-items: center;gap: 4px;"></div>
 		  <div class="app-bar__actions">
 			<!-- Validation error indicator — hidden when no errors -->
-			  <button class="app-bar__err-btn has-errors" title="View validation messages" style="display: inline-flex;">
+			  <button class="app-bar__err-btn has-errors" title="View validation messages" style="display: none;">
 				  ${MDUtils.icon('warn')}
 				  <span class="app-bar__err-count" id="errIndicatorCount">5</span>
 			  </button>
@@ -1814,7 +1949,8 @@
 		action:		handleFormActions,
 		toggleNav:	toggleNavPanel,
 		
-		errorWin: 	showErrorPopup
+		errorWin: 	showErrorPopup,
+		fieldNavigate: fieldNavigation
 		
 	};
 })(window);
