@@ -2,7 +2,7 @@ package com.metadyna.metadata.repository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.metadyna.metadata.model.AppRules;
+import com.metadyna.rulesManager.AppRules;
 import com.metadyna.metadata.model.ColumnMetadata;
 import com.metadyna.metadata.model.TableMetadata;
 import com.metadyna.metadata.model.UiMetadata;
