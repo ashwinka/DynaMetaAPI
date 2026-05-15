@@ -596,13 +596,32 @@ html, body { height: 100%; font-family: var(--md-font); font-size: 14px; color: 
   font-size: 13px;
   color: var(--md-text-primary);
   background: var(--md-surface);
-  transition: border-color var(--md-transition), box-shadow var(--md-transition);
+  transition: border-color var(--md-transition) 0.3s ease, box-shadow var(--md-transition);
   outline: none;
 }
-
+.md-input-highlight {
+  animation: borderPulse 1s ease 2;
+}
 .md-input:focus {
   border-color: var(--md-primary);
   box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.12);
+}
+
+@keyframes borderPulse {
+  0% {
+    border-color: #ccc;
+    box-shadow: 0 0 0px transparent;
+  }
+
+  50% {
+    border-color: #ff4d4f;
+    box-shadow: 0 0 8px rgba(255, 77, 79, 0.8);
+  }
+
+  100% {
+    border-color: #ccc;
+    box-shadow: 0 0 0px transparent;
+  }
 }
 
 .md-input:disabled {
