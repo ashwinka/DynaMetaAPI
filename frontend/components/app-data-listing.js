@@ -438,10 +438,10 @@
 		let sortFl = null;
 		let dir = 'ASC'
 		if(isLookup){
-			sortFl = _lkpMetadata.gridFields.find(f=>f.fieldId === _sortField);
+			sortFl = _lkpMetadata.GRID_FIELDS.find(f=>f.fieldId === _sortField);
 			dir = _lkpSortDir;
 		}else {
-			sortFl = _metadata.gridFields.find(f=>f.fieldId === _sortField);
+			sortFl = _metadata.GRID_FIELDS.find(f=>f.fieldId === _sortField);
 			dir = _sortDir;
 		}
 		
