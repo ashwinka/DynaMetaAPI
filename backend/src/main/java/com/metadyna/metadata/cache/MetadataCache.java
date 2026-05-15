@@ -3,9 +3,8 @@ package com.metadyna.metadata.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.metadyna.config.AppProperties;
-import com.metadyna.metadata.model.AppRules;
+import com.metadyna.rulesManager.AppRules;
 import com.metadyna.metadata.model.ModuleMetadata;
-import com.metadyna.metadata.model.UiMetadata;
 import com.metadyna.metadata.model.UiMetadataBundle;
 import com.metadyna.module.model.MenuGroup;
 import com.metadyna.module.model.ModuleEntry;
@@ -14,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
