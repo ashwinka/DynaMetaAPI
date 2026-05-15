@@ -312,7 +312,7 @@ Metadata JSON Structure:
 
 TO-DO:
 
-1. Render Conditions on fields and sections
+1. Render Conditions on fields and sections - DONE
 2. Render conditions for dynamic codelist and lookup
 3. Render conditions for readonly or required
 4. Render conditions for Grid operations.
@@ -333,5 +333,11 @@ TO-DO:
 		
 	Form Grid: 
 		selectAll, search
-10. Backend save validation errors integration with UI and field navigations.
-11. 
+		
+10. Backend save validation errors integration with UI and field navigations. 
+	context population - done
+10. Error window field navigation - done
+10. add multi-ctx grid pagination info to the navStack
+10. in the bread crum give the multi-ctx record title - done
+11. Multi-context breadcrum give option to switch multi-ctx records.
+12. json compare 
