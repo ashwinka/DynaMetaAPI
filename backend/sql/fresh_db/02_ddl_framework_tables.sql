@@ -142,6 +142,33 @@ CREATE TABLE IF NOT EXISTS UI_METADATA (
 
 
 ----------- APP_RULES -------------------
+-- RULE_EXPRESSION JSON schema:
+--
+-- Standard condition:
+--   {"lhsFieldId":"500011", "operator":"EQ", "rhsValue":""}
+--
+-- Function-based condition (lhsFunction applied to field value before comparison):
+--   {"lhsFunction":"COUNT",    "lhsFieldId":"515013", "operator":"GT",  "rhsValue":"0"}
+--   {"lhsFunction":"LENGTH",   "lhsFieldId":"530001", "operator":"GTE", "rhsValue":"2"}
+--   {"lhsFunction":"LWR_CASE", "lhsFieldId":"530001", "operator":"EQ",  "rhsValue":"unknown"}
+--   {"lhsFunction":"UP_CASE",  "lhsFieldId":"500011", "operator":"IN",  "rhsValue":["A","B"]}
+--   {"lhsFunction":"TRIM",     "lhsFieldId":"530001", "operator":"EQ",  "rhsValue":""}
+--   {"lhsFunction":"SUM",      "lhsFieldId":"615003", "operator":"GT",  "rhsValue":"0"}
+--   {"lhsFunction":"AVG",      "lhsFieldId":"615003", "operator":"LTE", "rhsValue":"100"}
+--
+-- Supported lhsFunction values:
+--   COUNT     — number of records in the multi-context collection for lhsFieldId
+--   LENGTH    — string length of the field value
+--   LWR_CASE  — lowercase the field value before comparison
+--   UP_CASE   — uppercase the field value before comparison
+--   TRIM      — trim whitespace from field value before comparison
+--   SUM       — sum of field values across all multi-context records
+--   AVG       — average of field values across all multi-context records
+--
+-- Supported operators: EQ / NEQ / IN / NOT_IN / LIKE / NOT_LIKE /
+--                      GT / GTE / LT / LTE / REG_EXP / NOT_REG_EXP
+--
+-- "expressions" array — reserved for sub-group / child condition groups
 CREATE TABLE IF NOT EXISTS APP_RULES(
 	ID              VARCHAR(36)     NOT NULL PRIMARY KEY,
     MODULE_ID       VARCHAR(300)    NOT NULL REFERENCES MODULE(MODULE_ID),
@@ -157,12 +184,14 @@ CREATE TABLE IF NOT EXISTS APP_RULES(
 	CONTEXT_PATH	VARCHAR(300),	
 	RULE_PARAMETERS	TEXT,
 	RULE_EXPRESSION	TEXT,
+	RULE_ACTIONS	TEXT,
 	CREATED_AT      TIMESTAMP       NOT NULL DEFAULT NOW(),
     UPDATED_AT      TIMESTAMP       NOT NULL DEFAULT NOW()	
 );
 
 CREATE TABLE IF NOT EXISTS APP_RULES_TRACKER(
 	ID              VARCHAR(36)     NOT NULL PRIMARY KEY,
+	MODULE_ID       VARCHAR(300)    NOT NULL REFERENCES MODULE(MODULE_ID),
     RULE_ID         VARCHAR(300)    NOT NULL REFERENCES APP_RULES(RULE_ID),
 	VERSION			INT				NOT NULL DEFAULT 0,
 	DESCRIPTION		VARCHAR(1000),	
@@ -171,6 +200,7 @@ CREATE TABLE IF NOT EXISTS APP_RULES_TRACKER(
 	CONTEXT_PATH	VARCHAR(300),	
 	RULE_PARAMETERS	TEXT,
 	RULE_EXPRESSION	TEXT,
+	RULE_ACTIONS	TEXT,
 	CREATED_AT      TIMESTAMP       NOT NULL DEFAULT NOW(),
     UPDATED_AT      TIMESTAMP       NOT NULL DEFAULT NOW()	
 );
