@@ -25,6 +25,9 @@ public class ModuleMetadata {
     private Map<String, List<ColumnMetadata>> columnIndex;
 
     /** Quick lookup: tableId → list of ColumnMetadata */
+    private Map<String, ColumnMetadata> allFieldsIndex;
+
+    /** Quick lookup: tableId → list of ColumnMetadata */
     private Map<String, List<TableMetadata>> tableIndexByParent;
 
     /** Root table (the one with no parentTableId) */
