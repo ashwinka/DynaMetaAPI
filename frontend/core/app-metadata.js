@@ -151,7 +151,11 @@
 		let sections = fmMd.sections || [];
 		for(let sec of sections){
 			sec.sectionPath = sectionPath;
-			resolveFormMd(sec, currFormFields, flMdMap, renderRuleMap, triggerFieldImpacts, rlInd, (level+1), sectionPath);
+			if(sec.tabPanel && level != 1){
+				fmMd.tabPanel = false;
+			}
+			let childLevel = sec.multiContext ? 1 : level+1;
+			resolveFormMd(sec, currFormFields, flMdMap, renderRuleMap, triggerFieldImpacts, rlInd, childLevel, sectionPath);
 		}
 	}
 	
